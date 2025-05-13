@@ -11,4 +11,4 @@ Henrique Ruiz Poyatos Neto
 | Nome  | RA |
 | -------------  | --- |
 | Antonio Carlos R. Oliveira Russo | ** |
-| Integrante     | RA |
+| Victor Henique Chaves De Jesus| RA 822222873|
