@@ -1,14 +1,14 @@
-import knex from '../services/bdConnection';
+import knex from '@/services/bdConnection';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { User } from '../types/user';
+import { User } from '@/types/user';
 import { Request, Response } from 'express';
 
 dotenv.config();
 
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
-    const userData: Omit<User, 'id' | 'created_at' | 'updated_at'> = req.body;
+    const userData: Omit<User, 'id'> = req.body;
 
     try {
         const existingEmail = await knex('users').where({ email: userData.email }).first();
@@ -23,7 +23,7 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
         res.status(201).json('Usuário cadastrado com sucesso.');
     } catch (error) {
         console.error(error);
-        res.status(500).json('Erro no servidor.');
+        res.status(500).json('Erro interno do servidor.');
     }
 };
 
@@ -49,13 +49,12 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             { expiresIn: '8h' }
         );
 
-        const { password: _, ...logedUser } = existingUser;
         res.status(200).json({
-            ...logedUser,
-            token,
-            message: `Bem vindo, ${logedUser.name.split(' ')[0]}`
+            message: `Bem vindo, ${existingUser.name.split(' ')[0]}`,
+            token
         });
     } catch (error) {
+        console.error(error);
         res.status(500).json('Erro interno do servidor.');
     }
 };

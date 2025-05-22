@@ -2,13 +2,13 @@ export interface Patient {
     id?: number;
     name: string;
     birth_date: string;
-    cpf: string;
     gender: string;
-    address_line: string;
-    address_number: string;
-    district: string;
-    city: string;
-    state: string;
-    zip_code: string;
-    is_active?: boolean;
+    cpf: string;
+    zip_code?: string;
+    address_line?: string;
+    district?: string;
+    address_number?: string;
+    city?: string;
+    state?: string;
+    active: boolean;
 }

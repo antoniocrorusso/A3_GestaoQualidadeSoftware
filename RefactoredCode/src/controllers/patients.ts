@@ -13,7 +13,7 @@ export const listPatients = async (req: Request, res: Response): Promise<void> =
 };
 
 export const registerPatient = async (req: Request, res: Response): Promise<void> => {
-    const patientData: Omit<Patient, 'id' | 'is_active'> = req.body;
+    const patientData: Omit<Patient, 'id' | 'active'> = req.body;
     const { birth_date: rawDate } = patientData;
     const birth_date = formatDateToInput(rawDate);
 
@@ -33,7 +33,7 @@ export const registerPatient = async (req: Request, res: Response): Promise<void
 
 export const editPatient = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
-    const patientData: Omit<Patient, 'id' | 'is_active'> = req.body;
+    const patientData: Omit<Patient, 'id' | 'active'> = req.body;
     const { birth_date: rawDate } = patientData;
     const birth_date = formatDateToInput(rawDate);
 
@@ -67,7 +67,7 @@ export const inactivatePatient = async (req: Request, res: Response): Promise<vo
             return;
         }
 
-        await knex('patients').update({ is_active: false }).where({ id });
+        await knex('patients').update({ active: false }).where({ id });
         res.status(200).json('Paciente inativado com sucesso.');
     } catch (error) {
         res.status(500).json('Erro interno do servidor.');
@@ -84,7 +84,7 @@ export const activatePatient = async (req: Request, res: Response): Promise<void
             return;
         }
 
-        await knex('patients').update({ is_active: true }).where({ id });
+        await knex('patients').update({ active: true }).where({ id });
         res.status(200).json('Paciente ativado com sucesso.');
     } catch (error) {
         res.status(500).json('Erro interno do servidor.');
