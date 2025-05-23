@@ -2,9 +2,9 @@ import knex from '../services/bdConnection';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { User } from '../types/user';
 import { Request, Response } from 'express';
 import { BaseController } from './baseController';
+import { User } from '../entities/User';
 
 dotenv.config();
 
@@ -27,12 +27,14 @@ class UserController extends BaseController {
         const operation = async () => {
             const existingEmail = await knex('users').where({ email: userData.email }).first();
             if (existingEmail) {
-                res.status(400).json('Já existe um usuário cadastrado com esse e-mail.');
+                res.status(409).json('Já existe um usuário cadastrado com esse e-mail.');
                 return;
             }
 
             const encryptedPassword = await bcrypt.hash(userData.password, 10);
-            await knex('users').insert({ ...userData, password: encryptedPassword });
+            userData.setPassword(encryptedPassword);
+
+            await knex('users').insert(userData);
             res.status(201).json('Usuário cadastrado com sucesso.');
         };
         await this.handleRequest(req, res, operation);
@@ -44,13 +46,13 @@ class UserController extends BaseController {
         const operation = async () => {
             const existingUser = await knex('users').where({ email }).first();
             if (!existingUser) {
-                res.status(401).json('Usuário não cadastrado.');
+                res.status(401).json('E-mail ou senha inválidos.');
                 return;
             }
 
             const decryptedPassword = await bcrypt.compare(password, existingUser.password);
             if (!decryptedPassword) {
-                res.status(401).json('Senha incorreta.');
+                res.status(401).json('E-mail ou senha inválidos.');
                 return;
             }
 

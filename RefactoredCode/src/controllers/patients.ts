@@ -33,7 +33,7 @@ class PatientController extends BaseController {
         const operation = async () => {
             const existingPatient = await knex('patients').where({ cpf: patientData.cpf }).first();
             if (existingPatient) {
-                res.status(400).json('Paciente com esse CPF já cadastrado.');
+                res.status(409).json('Já existe um paciente com este CPF cadastrado.');
                 return;
             }
 
@@ -58,7 +58,7 @@ class PatientController extends BaseController {
 
             const existingCPF = await knex('patients').where({ cpf: patientData.cpf }).first();
             if (existingCPF && existingCPF.id !== Number(id)) {
-                res.status(400).json('Já existe um paciente com este CPF cadastrado.');
+                res.status(409).json('Já existe um paciente com este CPF cadastrado.');
                 return;
             }
 
