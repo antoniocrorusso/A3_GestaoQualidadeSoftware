@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { User } from '@/types/user';
+import { User } from '../types/user';
 import Joi from 'joi';
 
 interface UserRequest extends Request {
