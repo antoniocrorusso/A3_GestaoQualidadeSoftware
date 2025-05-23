@@ -1,30 +1,25 @@
-import express, { Router } from 'express';
-import { userController } from './controllers/users';
+import { Router } from 'express';
 import { patientController } from './controllers/patients';
-import { validateUserData } from './middlewares/users';
-import { validatePatientExists } from './middlewares/patients';
-import { registerUserSchema, loginUserSchema } from './schemas/users';
-import { registerPatientSchema, editPatientSchema } from './schemas/patients';
-import { authentication } from './middlewares/auth';
+import { editPatientSchema, registerPatientSchema } from './schemas/patients';
+import { validatePatientSchema } from './middlewares/patients';
 
-const routes = express.Router();
+export const router = Router();
 
-routes.get('/', (req, res) => {
-    return res.status(200).json({ message: "Servidor ativo" });
+// TODO: Remover logs de teste ao fim do desenvolvimento
+router.get('/health', (req, res) => {
+    res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Rotas públicas
-routes.post('/user/register', validateUserData(registerUserSchema), (req, res) => userController.registerUser(req, res));
-routes.post('/user/login', validateUserData(loginUserSchema), (req, res) => userController.loginUser(req, res));
+router.get('/patients', (req, res) => patientController.listPatients(req, res));
+router.post('/patients',
+    validatePatientSchema(registerPatientSchema),
+    (req, res) => patientController.registerPatient(req, res)
+);
+router.put('/patients/:id',
+    validatePatientSchema(editPatientSchema),
+    (req, res) => patientController.editPatient(req, res)
+);
+router.patch('/patients/:id/inactivate', (req, res) => patientController.inactivatePatient(req, res));
+router.patch('/patients/:id/activate', (req, res) => patientController.activatePatient(req, res));
 
-// Middleware de autenticação para rotas protegidas
-routes.use(authentication);
-
-// Rotas de pacientes
-routes.get('/patients/list', (req, res) => patientController.listPatients(req, res));
-routes.post('/patients/register', validateUserData(registerPatientSchema), (req, res) => patientController.registerPatient(req, res));
-routes.put('/patients/:id/edit', validatePatientExists, validateUserData(editPatientSchema), (req, res) => patientController.editPatient(req, res));
-routes.delete('/patient/:id/delete', validatePatientExists, (req, res) => patientController.inactivatePatient(req, res));
-routes.put('/patient/:id/activate', validatePatientExists, (req, res) => patientController.activatePatient(req, res));
-
-export default routes;
+export default router;
