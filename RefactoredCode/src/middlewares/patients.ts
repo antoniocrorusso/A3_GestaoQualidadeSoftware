@@ -1,24 +1,24 @@
 import knex from '../services/bdConnection';
 import { Request, Response, NextFunction } from 'express';
 import { Patient } from '../types/patient';
+import * as Joi from 'joi';
 
 interface PatientRequest extends Request {
     patient?: Patient;
 }
 
-export const validatePatientExists = async (req: PatientRequest, res: Response, next: NextFunction): Promise<void> => {
-    const { id } = req.params;
+export const validatePatientSchema = (schema: Joi.Schema) => {
+    return (req: PatientRequest, res: Response, next: NextFunction) => {
+        const { error } = schema.validate(req.body, { abortEarly: false });
 
-    try {
-        const patient = await knex('patients').where({ id }).first();
-        if (!patient) {
-            res.status(404).json('Paciente não encontrado.');
-            return;
+        if (error) {
+            const errorMessages = error.details.map(detail => ({
+                message: detail.message,
+                field: detail.context?.key
+            }));
+            return res.status(400).json({ errors: errorMessages });
         }
 
-        req.patient = patient;
         next();
-    } catch (error) {
-        res.status(500).json('Erro interno do servidor.');
-    }
+    };
 };
