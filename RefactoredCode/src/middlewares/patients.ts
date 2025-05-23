@@ -1,6 +1,6 @@
-import knex from '@/services/bdConnection';
+import knex from '../services/bdConnection';
 import { Request, Response, NextFunction } from 'express';
-import { Patient } from '@/types/patient';
+import { Patient } from '../types/patient';
 
 interface PatientRequest extends Request {
     patient?: Patient;
