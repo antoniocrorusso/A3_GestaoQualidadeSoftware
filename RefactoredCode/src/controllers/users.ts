@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { Request, Response } from 'express';
 import { BaseController } from './baseController';
-import { User } from '../entities/User';
+import { User } from '../entities/user';
 
 dotenv.config();
 
