@@ -13,4 +13,6 @@ Henrique Ruiz Poyatos Neto
 | Antonio Carlos R. Oliveira Russo | ** |
 | Victor Henique Chaves De Jesus| RA 822222873|
 | Lucas Almeida Braz| RA 1272322938|
+| Igor Henrique Andrade Martins| RA 323210810|
+
 
