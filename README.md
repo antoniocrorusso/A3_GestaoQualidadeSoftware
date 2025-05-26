@@ -5,6 +5,7 @@ Repositório com os códigos legado e refatorados utilizados para desenvolver a 
 **Professores:**  
 Arquelau Pasta  
 Henrique Ruiz Poyatos Neto
+Magda
 
 **Grupo:**
 
