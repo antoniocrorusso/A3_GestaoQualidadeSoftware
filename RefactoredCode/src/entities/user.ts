@@ -1,3 +1,5 @@
+import { hash, compare } from 'bcrypt';
+
 export class User {
     private _id?: number;
     private _name: string;
@@ -28,7 +30,7 @@ export class User {
     }
 
     set name(name: string) {
-        if (!name || name.trim().length) {
+        if (!name || !name.trim().length) {
             throw new Error('O nome é obrigatório');
         }
         this._name = name.trim();
@@ -46,10 +48,10 @@ export class User {
         if (!password || password.length < 8) {
             throw new Error('A senha deve ter no mínimo 8 caracteres');
         }
-        this._password = password;
+        this._password = await hash(password, 10);
     }
 
     async validatePassword(password: string): Promise<boolean> {
-        return password === this._password;
+        return await compare(password, this._password);
     }
 }
