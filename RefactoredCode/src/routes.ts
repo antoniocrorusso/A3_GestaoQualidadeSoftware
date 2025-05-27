@@ -1,30 +1,33 @@
-import express, { Router } from 'express';
-import { userController } from './controllers/users';
+import { Router } from 'express';
 import { patientController } from './controllers/patients';
-import { validateUserData } from './middlewares/users';
-import { validatePatientExists } from './middlewares/patients';
+import { userController } from './controllers/users';
+import { editPatientSchema, registerPatientSchema } from './schemas/patients';
 import { registerUserSchema, loginUserSchema } from './schemas/users';
-import { registerPatientSchema, editPatientSchema } from './schemas/patients';
+import { validatePatientSchema } from './middlewares/patients';
+import { validateUserData } from './middlewares/users';
 import { authentication } from './middlewares/auth';
 
-const routes = express.Router();
+export const router = Router();
 
-routes.get('/', (req, res) => {
-    return res.status(200).json({ message: "Servidor ativo" });
+router.get('/health', (req, res) => {
+    res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Rotas públicas
-routes.post('/user/register', validateUserData(registerUserSchema), (req, res) => userController.registerUser(req, res));
-routes.post('/user/login', validateUserData(loginUserSchema), (req, res) => userController.loginUser(req, res));
+router.post('/users', validateUserData(registerUserSchema), (req, res) => userController.registerUser(req, res));
+router.post('/users/login', validateUserData(loginUserSchema), (req, res) => userController.loginUser(req, res));
 
-// Middleware de autenticação para rotas protegidas
-routes.use(authentication);
+router.use(authentication);
 
-// Rotas de pacientes
-routes.get('/patients/list', (req, res) => patientController.listPatients(req, res));
-routes.post('/patients/register', validateUserData(registerPatientSchema), (req, res) => patientController.registerPatient(req, res));
-routes.put('/patients/:id/edit', validatePatientExists, validateUserData(editPatientSchema), (req, res) => patientController.editPatient(req, res));
-routes.delete('/patient/:id/delete', validatePatientExists, (req, res) => patientController.inactivatePatient(req, res));
-routes.put('/patient/:id/activate', validatePatientExists, (req, res) => patientController.activatePatient(req, res));
+router.get('/patients', (req, res) => patientController.listPatients(req, res));
+router.post('/patients',
+    validatePatientSchema(registerPatientSchema),
+    (req, res) => patientController.registerPatient(req, res)
+);
+router.put('/patients/:id',
+    validatePatientSchema(editPatientSchema),
+    (req, res) => patientController.editPatient(req, res)
+);
+router.put('/patients/:id/inactivate', (req, res) => patientController.inactivatePatient(req, res));
+router.put('/patients/:id/activate', (req, res) => patientController.activatePatient(req, res));
 
-export default routes;
+export default router;

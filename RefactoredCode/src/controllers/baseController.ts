@@ -11,7 +11,6 @@ export abstract class BaseController {
         try {
             await operation();
         } catch (error) {
-            console.error(error);
             res.status(500).json('Erro interno do servidor.');
         }
     }
