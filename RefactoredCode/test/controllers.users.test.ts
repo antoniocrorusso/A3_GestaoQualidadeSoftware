@@ -40,9 +40,7 @@ const injectSetPassword = (req: any) => {
   });
 };
 
-beforeAll(() => {
-  process.env.JWT_PASSWORD = "A3_UNIT_TEST_ENV";
-});
+beforeAll(() => { process.env.JWT_PASSWORD = "A3_UNIT_TEST_ENV"; }); // This is the Mock Test Env.
 
 describe("UserController", () => {
   afterEach(() => jest.clearAllMocks());
