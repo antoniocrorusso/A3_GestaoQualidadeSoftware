@@ -1,92 +1,110 @@
-import knex from '@/services/bdConnection';
-import { Patient } from '@/types/patient';
-import { formatDateToInput } from '@/utils/formatDate';
 import { Request, Response } from 'express';
+import { BaseController } from './baseController';
+import { PatientService } from '../services/PatientService';
+import { PatientRepository } from '../repositories/PatientRepository';
+import { formatDateToInput } from '../utils/formatDate';
 
-export const listPatients = async (req: Request, res: Response): Promise<void> => {
-    try {
-        const patientsList = await knex('patients');
-        res.status(200).json(patientsList);
-    } catch (error) {
-        res.status(500).json('Erro interno do servidor.');
+export class PatientController extends BaseController {
+    private patientService: PatientService;
+
+    constructor(patientService?: PatientService) {
+        super();
+        this.patientService = patientService || new PatientService(new PatientRepository());
     }
-};
 
-export const registerPatient = async (req: Request, res: Response): Promise<void> => {
-    const patientData: Omit<Patient, 'id' | 'active'> = req.body;
-    const { birth_date: rawDate } = patientData;
-    const birth_date = formatDateToInput(rawDate);
-
-    try {
-        const existingPatient = await knex('patients').where({ cpf: patientData.cpf }).first();
-        if (existingPatient) {
-            res.status(400).json('Paciente com esse CPF já cadastrado.');
-            return;
+    private handleError(res: Response, error: unknown, defaultMessage: string, statusCode: number = 400): void {
+        if (error instanceof Error) {
+            res.status(statusCode).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: 'Erro interno do servidor' });
         }
-
-        await knex('patients').insert({ ...patientData, birth_date });
-        res.status(201).json(`Paciente "${patientData.name}" cadastrado com sucesso.`);
-    } catch (error) {
-        res.status(500).json('Erro interno do servidor.');
     }
-};
 
-export const editPatient = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-    const patientData: Omit<Patient, 'id' | 'active'> = req.body;
-    const { birth_date: rawDate } = patientData;
-    const birth_date = formatDateToInput(rawDate);
-
-    try {
-        const existingPatient = await knex('patients').where({ id }).first();
-        if (!existingPatient) {
-            res.status(404).json('Paciente não encontrado.');
-            return;
+    public listPatients = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const patients = await this.patientService.getAllPatients();
+            res.status(200).json(patients);
+        } catch (error) {
+            this.handleError(res, error, 'Erro ao listar pacientes');
         }
+    };
 
-        const existingCPF = await knex('patients').where({ cpf: patientData.cpf }).first();
-        if (existingCPF && existingCPF.id !== Number(id)) {
-            res.status(400).json('Já existe um paciente com este CPF cadastrado.');
-            return;
+    public registerPatient = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const patientData = req.body;
+            const patient = await this.patientService.createPatient({
+                ...patientData,
+                birthDate: formatDateToInput(patientData.birth_date)
+            });
+            res.status(201).json({
+                success: true,
+                message: `Paciente "${patient.name}" cadastrado com sucesso.`,
+                data: patient
+            });
+        } catch (error) {
+            this.handleError(res, error, 'Erro ao cadastrar paciente');
         }
+    };
 
-        await knex('patients').update({ ...patientData, birth_date }).where({ id });
-        res.status(200).json('Dados do paciente atualizados com sucesso.');
-    } catch (error) {
-        res.status(500).json('Erro interno do servidor.');
-    }
-};
+    public editPatient = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { id } = req.params;
+            const patientData = req.body;
 
-export const inactivatePatient = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
+            const updatedPatient = await this.patientService.updatePatient(Number(id), {
+                ...patientData,
+                birthDate: patientData.birth_date ? formatDateToInput(patientData.birth_date) : undefined
+            });
 
-    try {
-        const patient = await knex('patients').where({ id }).first();
-        if (!patient) {
-            res.status(404).json('Paciente não encontrado.');
-            return;
+            res.status(200).json({
+                success: true,
+                message: 'Dados do paciente atualizados com sucesso.',
+                data: updatedPatient
+            });
+        } catch (error) {
+            this.handleError(res, error, 'Erro ao atualizar paciente');
         }
+    };
 
-        await knex('patients').update({ active: false }).where({ id });
-        res.status(200).json('Paciente inativado com sucesso.');
-    } catch (error) {
-        res.status(500).json('Erro interno do servidor.');
-    }
-};
-
-export const activatePatient = async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-
-    try {
-        const patient = await knex('patients').where({ id }).first();
-        if (!patient) {
-            res.status(404).json('Paciente não encontrado.');
-            return;
+    public inactivatePatient = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { id } = req.params;
+            await this.patientService.togglePatientStatus(Number(id), false);
+            res.status(200).json({
+                success: true,
+                message: 'Paciente inativado com sucesso.'
+            });
+        } catch (error) {
+            this.handleError(res, error, 'Erro ao inativar paciente');
         }
+    };
 
-        await knex('patients').update({ active: true }).where({ id });
-        res.status(200).json('Paciente ativado com sucesso.');
-    } catch (error) {
-        res.status(500).json('Erro interno do servidor.');
-    }
-};
+    public activatePatient = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { id } = req.params;
+            await this.patientService.togglePatientStatus(Number(id), true);
+            res.status(200).json({
+                success: true,
+                message: 'Paciente ativado com sucesso.'
+            });
+        } catch (error) {
+            this.handleError(res, error, 'Erro ao ativar paciente');
+        }
+    };
+
+    public getPatientById = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { id } = req.params;
+            const patient = await this.patientService.getPatientById(Number(id));
+            if (!patient) {
+                res.status(404).json({ error: 'Paciente não encontrado' });
+                return;
+            }
+            res.status(200).json(patient);
+        } catch (error) {
+            this.handleError(res, error, 'Erro ao buscar paciente');
+        }
+    };
+}
+
+export const patientController = new PatientController();
