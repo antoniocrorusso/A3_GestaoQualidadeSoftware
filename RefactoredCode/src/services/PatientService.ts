@@ -8,7 +8,6 @@ export class PatientService {
         try {
             return await this.repository.findAll();
         } catch (error) {
-            console.error('Erro ao buscar pacientes:', error);
             throw new Error('Erro ao buscar pacientes.');
         }
     }
@@ -20,7 +19,6 @@ export class PatientService {
             }
             return await this.repository.findById(id);
         } catch (error) {
-            console.error(`Erro ao buscar paciente com ID ${id}:`, error);
             throw new Error('Erro ao buscar paciente.');
         }
     }
@@ -39,7 +37,6 @@ export class PatientService {
             if (error instanceof Error) {
                 throw error;
             }
-            console.error('Erro ao criar paciente:', error);
             throw new Error('Erro ao criar paciente.');
         }
     }
@@ -70,7 +67,6 @@ export class PatientService {
             if (error instanceof Error) {
                 throw error;
             }
-            console.error(`Erro ao atualizar paciente com ID ${id}:`, error);
             throw new Error('Erro ao atualizar paciente.');
         }
     }
@@ -91,7 +87,6 @@ export class PatientService {
             if (error instanceof Error) {
                 throw error;
             }
-            console.error(`Erro ao alternar status do paciente com ID ${id}:`, error);
             throw new Error('Erro ao alternar status do paciente.');
         }
     }

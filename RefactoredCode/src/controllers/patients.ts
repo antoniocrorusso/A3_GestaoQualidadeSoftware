@@ -16,7 +16,6 @@ export class PatientController extends BaseController {
         if (error instanceof Error) {
             res.status(statusCode).json({ error: error.message });
         } else {
-            console.error(`${defaultMessage}:`, error);
             res.status(500).json({ error: 'Erro interno do servidor' });
         }
     }

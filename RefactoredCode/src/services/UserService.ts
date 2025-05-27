@@ -18,7 +18,6 @@ export class UserService {
             if (error instanceof Error) {
                 throw error;
             }
-            console.error('Erro ao criar usuário:', error);
             throw new Error('Erro ao criar usuário.');
         }
     }
@@ -36,7 +35,6 @@ export class UserService {
 
             return user;
         } catch (error) {
-            console.error('Erro ao autenticar usuário:', error);
             throw new Error('Erro ao autenticar usuário.');
         }
     }
