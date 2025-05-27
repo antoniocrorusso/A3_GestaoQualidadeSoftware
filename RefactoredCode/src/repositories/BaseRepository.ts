@@ -21,9 +21,9 @@ export abstract class BaseRepository<T extends { id?: number }> implements IRepo
         return created;
     }
 
-    async update(id: number, entity: Partial<T>): Promise<boolean> {
-        const count = await knex(this.tableName).where({ id }).update(entity);
-        return count > 0;
+    async update(id: number, entity: Partial<T>): Promise<T> {
+        const updatedData = await knex(this.tableName).where({ id }).update(entity).returning('*');
+        return updatedData[0];
     }
 
     async delete(id: number): Promise<boolean> {

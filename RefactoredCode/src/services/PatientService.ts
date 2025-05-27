@@ -56,20 +56,16 @@ export class PatientService {
             }
 
             const patientWithSameCpf = await this.repository.findByCpf(patientData.cpf);
-            if (patientWithSameCpf) {
+            if (patientWithSameCpf && patientWithSameCpf.id !== id) {
                 throw new Error('Já existe um paciente com este CPF cadastrado.');
             }
 
-            const success = await this.repository.update(id, patientData);
-            if (!success) {
+            const updatedPatient = await this.repository.update(id, patientData);
+            if (!updatedPatient) {
                 throw new Error('Falha ao atualizar o paciente.');
             }
 
-            const result = await this.repository.findById(id);
-            if (!result) {
-                throw new Error('Erro ao buscar paciente atualizado.');
-            }
-            return result;
+            return updatedPatient;
         } catch (error) {
             if (error instanceof Error) {
                 throw error;

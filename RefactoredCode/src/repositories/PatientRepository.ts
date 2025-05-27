@@ -6,7 +6,7 @@ export interface IPatientRepository {
     findByCpf(cpf: string): Promise<Patient | null>;
     toggleStatus(id: number, active: boolean): Promise<boolean>;
     create(patientData: Omit<Patient, 'id'>): Promise<Patient>;
-    update(id: number, patientData: Partial<Patient>): Promise<boolean>;
+    update(id: number, patientData: Partial<Patient>): Promise<Patient>;
     findById(id: number): Promise<Patient | null>;
     findAll(): Promise<Patient[]>;
     delete(id: number): Promise<boolean>;
@@ -31,13 +31,40 @@ export class PatientRepository extends BaseRepository<Patient> implements IPatie
     }
 
     async create(patientData: Omit<Patient, 'id'>): Promise<Patient> {
-        const [created] = await knex(this.tableName).insert(patientData).returning('*');
+        const patientToInsert = {
+            name: patientData.name,
+            birth_date: patientData.birthDate,
+            cpf: patientData.cpf,
+            gender: patientData.gender,
+            address_line: patientData.addressLine,
+            address_number: patientData.addressNumber,
+            district: patientData.district,
+            city: patientData.city,
+            state: patientData.state,
+            zip_code: patientData.zipCode,
+            active: patientData.active
+        };
+
+        const [created] = await knex(this.tableName).insert(patientToInsert).returning('*');
         return new Patient(created);
     }
 
-    async update(id: number, patientData: Partial<Patient>): Promise<boolean> {
-        const count = await knex(this.tableName).where({ id }).update(patientData);
-        return count > 0;
+    async update(id: number, patientData: Partial<Patient>): Promise<Patient> {
+        const patientToInsert = {
+            name: patientData.name,
+            birth_date: patientData.birthDate,
+            cpf: patientData.cpf,
+            gender: patientData.gender,
+            address_line: patientData.addressLine,
+            address_number: patientData.addressNumber,
+            district: patientData.district,
+            city: patientData.city,
+            state: patientData.state,
+            zip_code: patientData.zipCode,
+            active: patientData.active
+        };
+        const updatedPacient = await knex(this.tableName).where({ id }).update(patientToInsert).returning('*');
+        return new Patient(updatedPacient[0]);
     }
 
     async findById(id: number): Promise<Patient | null> {
