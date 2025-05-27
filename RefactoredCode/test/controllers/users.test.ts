@@ -1,11 +1,11 @@
-import { userController } from "../src/controllers/users";
-import knex from "../src/services/bdConnection";
+import { userController } from "../../src/controllers/users";
+import knex from "../../src/services/bdConnection";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 //OBS: To test database methods, request and response on the controllers classes, we decided to mock those using jest.
 
-jest.mock("../src/services/bdConnection", () => {
+jest.mock("../../src/services/bdConnection", () => {
   const builder = {
     where: jest.fn().mockReturnThis(),
     first: jest.fn(),

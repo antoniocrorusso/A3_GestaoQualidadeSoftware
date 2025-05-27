@@ -1,14 +1,14 @@
-import { patientController } from "../src/controllers/patients";
-import knex from "../src/services/bdConnection";
+import { patientController } from "../../src/controllers/patients";
+import knex from "../../src/services/bdConnection";
 
 //OBS: To test database methods, request and response on the controllers classes, we decided to mock those using jest.
 
-jest.mock("../src/utils/formatDate", () => ({
+jest.mock("../../src/utils/formatDate", () => ({
   __esModule: true,
   formatDateToInput: jest.fn((d: string) => d),
 }));
 
-jest.mock("../src/services/bdConnection", () => {
+jest.mock("../../src/services/bdConnection", () => {
   const builder = {
     where: jest.fn().mockReturnThis(),
     first: jest.fn(),

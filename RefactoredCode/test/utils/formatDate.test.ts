@@ -1,4 +1,4 @@
-import { formatDateToInput } from "../src/utils/formatDate"
+import { formatDateToInput } from "../../src/utils/formatDate"
 
 
 describe('formatDateToInput', () => {

@@ -1,11 +1,11 @@
-import { authentication } from "../src/middlewares/auth";
-import knex from "../src/services/bdConnection";
+import { authentication } from "../../src/middlewares/auth";
+import knex from "../../src/services/bdConnection";
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 
 //Like the other test suites, I decided to mock the Web token and Request/Response.
 
-jest.mock("../src/services/bdConnection", () => {
+jest.mock("../../src/services/bdConnection", () => {
   const builder = {
     where: jest.fn().mockReturnThis(),
     first: jest.fn(),
