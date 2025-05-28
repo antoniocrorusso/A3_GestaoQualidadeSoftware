@@ -1,12 +1,7 @@
 import { BaseRepository } from './BaseRepository';
 import { User } from '../entities/user';
 import knex from '../services/bdConnection';
-
-export interface IUserRepository {
-    findByEmail(email: string): Promise<User | null>;
-    create(userData: Omit<User, 'id'>): Promise<User>;
-    findById(id: number): Promise<User | null>;
-}
+import { IUserRepository } from '../interfaces/IUserRepository';
 
 export class UserRepository extends BaseRepository<User> implements IUserRepository {
     constructor() {
