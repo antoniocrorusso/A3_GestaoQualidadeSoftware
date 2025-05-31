@@ -11,7 +11,7 @@ const mockReqRes = () => {
 };
 
 // We mock a new controller before each test to ensure there's no carryover cached erros, that could impact the next one and cause errors.
-// We also mock the PatientService, only mirroing it's methods, because we're testing their methods, but the controller ones.
+// We also mock the PatientService, only mirroing it's methods, because we're not testing their methods, but the controller ones.
 let mockService: any;
 let patientController: PatientController;
 
