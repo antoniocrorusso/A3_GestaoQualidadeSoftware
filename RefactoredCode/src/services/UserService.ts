@@ -1,8 +1,8 @@
 import { User } from '../entities/user';
-import { IUserRepository } from '../repositories/UserRepository';
+import { UserRepository } from '../repositories/UserRepository';
 
 export class UserService {
-    constructor(private repository: IUserRepository) { }
+    constructor(private repository: UserRepository) { }
 
     async createUser(userData: Omit<User, 'id'>): Promise<User> {
         try {

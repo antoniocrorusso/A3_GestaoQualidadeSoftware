@@ -6,9 +6,6 @@ import { UserRepository } from '../repositories/UserRepository';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { Request, Response } from 'express';
-import { BaseController } from './baseController';
-import { User } from '../entities/user';
 
 dotenv.config();
 
