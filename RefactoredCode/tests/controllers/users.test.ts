@@ -4,7 +4,7 @@ import { User } from "../../src/entities/user";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-//We mock database methods, request and response, services, we tokens, and encryptions, only mirroing it's methods, 
+//We mock database methods, request and response, services, web tokens, and encryptions, only mirroing it's methods, 
 // because we're not testing their methods, but the controller ones.
 
 jest.mock("../../src/services/UserService");
@@ -18,25 +18,31 @@ const mockRes = () => {
   return res;
 };
 
-//Note to group: we'll need to set the Test environment manually, to mock it on the test cases.
-beforeAll(() => { process.env.JWT_PASSWORD = "A3_UNIT_TEST_ENV"; });
-
-let mockService: any;
-let userController: UserController;
-
-beforeEach(() => {
-  mockService = {
-    createUser: jest.fn(),
-    loginUser: jest.fn(),
-  };
-
-  userController = UserController.createInstanceForTest(mockService);
-  (userController as any).userService = mockService;
-});
-
 describe("UserController", () => {
+  //Note to group: we'll need to set the Test environment manually, to mock it on the test cases. After is done, we delete it.
+  beforeAll(() => {
+    process.env.JWT_PASSWORD = "A3_UNIT_TEST_ENV";
+  });
+
+  afterAll(() => {
+    delete process.env.JWT_PASSWORD;
+  });
+
+  let mockService: any;
+  let userController: UserController;
+
+  beforeEach(() => {
+    mockService = {
+      createUser: jest.fn(),
+      loginUser: jest.fn(),
+    };
+    userController = UserController.createInstanceForTest(mockService);
+    (userController as any).userService = mockService;
+  });
+
   afterEach(() => jest.clearAllMocks());
 
+  //Test Cases
   test("case method: registerUser - completed successfully", async () => {
     const req = {
       body: {
@@ -86,26 +92,37 @@ describe("UserController", () => {
       },
     };
     const res = mockRes();
-    const user = new User({ id: 1, name: "Usuário Logado", email: req.body.email, password: req.body.password });
+    const user = new User({
+      id: 1,
+      name: "Usuário Logado",
+      email: req.body.email,
+      password: req.body.password,
+    });
     mockService.loginUser.mockResolvedValueOnce(user);
     (jwt.sign as jest.Mock).mockReturnValue("fake-jwt-token");
     await userController.loginUser(req as Request, res as Response);
 
     //Expected answers
-    expect(mockService.loginUser).toHaveBeenCalledWith(req.body.email, req.body.password);
+    expect(mockService.loginUser).toHaveBeenCalledWith(
+      req.body.email,
+      req.body.password
+    );
     expect(jwt.sign).toHaveBeenCalledWith(
       { userId: user.id, email: user.email },
       expect.any(String),
       { expiresIn: "24h" }
     );
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({ msg: `Bem vindo, ${user.name}!`, token: "fake-jwt-token" });
+    expect(res.json).toHaveBeenCalledWith({
+      msg: `Bem vindo, ${user.name}!`,
+      token: "fake-jwt-token",
+    });
   });
 
   test("case method: loginUser - Service error: User or password invalid", async () => {
     const req = {
       body: {
-        email: "login@email.com",
+        email: "invalidlogin@email.com",
         password: "senha123",
       },
     };
@@ -121,7 +138,7 @@ describe("UserController", () => {
   test("case method: loginUser - Service error: Generic error", async () => {
     const req = {
       body: {
-        email: "login@email.com",
+        email: "invalidlogin@email.com",
         password: "senha",
       },
     };
