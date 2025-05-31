@@ -11,7 +11,7 @@ export class UserService {
                 throw new Error('Já existe um usuário com este e-mail cadastrado.');
             }
 
-            userData.setPassword(userData.password);
+            await userData.setPassword(userData.password);
             const user = new User(userData);
             return await this.repository.create(user);
         } catch (error) {
