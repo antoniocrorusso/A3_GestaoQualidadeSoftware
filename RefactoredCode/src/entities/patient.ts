@@ -128,7 +128,7 @@ export class Patient {
         this._district = district.trim();
     }
     set city(city: string) {
-        if (!city || city.trim().length) {
+        if (!city || city.trim().length === 0) {
             throw new Error('A cidade é obrigatória');
         }
         this._city = city.trim();
