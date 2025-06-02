@@ -1,21 +1,13 @@
-import { userController } from "../../src/controllers/users";
-import knex from "../../src/services/bdConnection";
+import { Request, Response } from "express";
+import { UserController } from "../../src/controllers/users";
+import { User } from "../../src/entities/user";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-//OBS: To test database methods, request and response on the controllers classes, we decided to mock those using jest.
+//We mock database methods, request and response, services, web tokens, and encryptions, only mirroing it's methods, 
+// because we're not testing their methods, but the controller ones.
 
-jest.mock("../../src/services/bdConnection", () => {
-  const builder = {
-    where: jest.fn().mockReturnThis(),
-    first: jest.fn(),
-    insert: jest.fn(),
-  };
-  const knex = jest.fn(() => builder);
-  Object.assign(knex, builder);
-  return { __esModule: true, default: knex };
-});
-
+jest.mock("../../src/services/UserService");
 jest.mock("bcrypt");
 jest.mock("jsonwebtoken");
 
@@ -26,25 +18,31 @@ const mockRes = () => {
   return res;
 };
 
-jest.spyOn(console, "error").mockImplementation(() => {}); //To ignore console errors.
-
-//NOTE to the group: Since the tests doens't actually instantiate the User class, we need to mock the setPassword method to be used outside an object, 
-// to avoid undefined errors. Also, we'll need to set the Test environment manually, to mock it on the test cases.
-const injectSetPassword = (req: any) => {
-  Object.defineProperty(req.body, "setPassword", {
-    value: function (pw: string) {
-      this.password = pw;
-    },
-    writable: true,
-    enumerable: false,
-  });
-};
-
-beforeAll(() => { process.env.JWT_PASSWORD = "A3_UNIT_TEST_ENV"; }); // This is the Mock Test Env.
-
 describe("UserController", () => {
+  //Note to group: we'll need to set the Test environment manually, to mock it on the test cases. After is done, we delete it.
+  beforeAll(() => {
+    process.env.JWT_PASSWORD = "A3_UNIT_TEST_ENV";
+  });
+
+  afterAll(() => {
+    delete process.env.JWT_PASSWORD;
+  });
+
+  let mockService: any;
+  let userController: UserController;
+
+  beforeEach(() => {
+    mockService = {
+      createUser: jest.fn(),
+      loginUser: jest.fn(),
+    };
+    userController = UserController.createInstanceForTest(mockService);
+    (userController as any).userService = mockService;
+  });
+
   afterEach(() => jest.clearAllMocks());
 
+  //Test Cases
   test("case method: registerUser - completed successfully", async () => {
     const req = {
       body: {
@@ -53,23 +51,21 @@ describe("UserController", () => {
         password: "senha123",
       },
     };
-
-    injectSetPassword(req);
     const res = mockRes();
-    (knex.first as jest.Mock).mockResolvedValueOnce(undefined); // Simulate there was no duplicates
-    (bcrypt.hash as jest.Mock).mockResolvedValue("hashed_pw");
+    const hashedPassword = "hashedPassword";
+    (bcrypt.hash as jest.Mock).mockResolvedValue(hashedPassword);
+    const createdUser = new User({ ...req.body, password: hashedPassword });
+    mockService.createUser.mockResolvedValue(createdUser);
+    await userController.registerUser(req as Request, res as Response);
 
-    (knex.insert as jest.Mock).mockImplementation((user) => {
-      expect(user.password).toBe("hashed_pw");
-      return Promise.resolve();
-    });
-
-    await userController.registerUser(req as any, res as any);
+    // Expected Answers
+    expect(bcrypt.hash).toHaveBeenCalledWith("senha123", 10);
+    expect(mockService.createUser).toHaveBeenCalledWith(expect.any(User));
     expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(expect.stringContaining("Usuário cadastrado")); // Expected answer.
+    expect(res.json).toHaveBeenCalledWith(createdUser);
   });
 
-  test("case method: registerUser - error for already existing email", async () => {
+  test("case method: registerUser - Service error for already existing email", async () => {
     const req = {
       body: {
         name: "emailDuplicado",
@@ -77,13 +73,15 @@ describe("UserController", () => {
         password: "senha123",
       },
     };
-
-    injectSetPassword(req);
     const res = mockRes();
-    (knex.first as jest.Mock).mockResolvedValueOnce({ id: 1 }); // email exists
-    await userController.registerUser(req as any, res as any);
-    expect(res.status).toHaveBeenCalledWith(409);
-    expect(res.json).toHaveBeenCalledWith(expect.stringContaining("Já existe um usuário")); // Expected answer.
+    const error = new Error("Já existe um usuário com este e-mail cadastrado.");
+    (bcrypt.hash as jest.Mock).mockResolvedValueOnce("hashedPass");
+    mockService.createUser.mockRejectedValueOnce(error);
+    await userController.registerUser(req as Request, res as Response);
+
+    //Expected Answers
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(error.message);
   });
 
   test("case method: loginUser - completed successfully", async () => {
@@ -94,63 +92,62 @@ describe("UserController", () => {
       },
     };
     const res = mockRes();
-
-    (knex.first as jest.Mock).mockResolvedValueOnce({
+    const user = new User({
       id: 1,
-      name: "Teste Login",
-      password: "hashed_pw",
+      name: "Usuário Logado",
+      email: req.body.email,
+      password: req.body.password,
     });
+    mockService.loginUser.mockResolvedValueOnce(user);
+    (jwt.sign as jest.Mock).mockReturnValue("fake-jwt-token");
+    await userController.loginUser(req as Request, res as Response);
 
-    (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-    (jwt.sign as jest.Mock).mockReturnValue("mocked_token");
-    await userController.loginUser(req as any, res as any);
-    expect(bcrypt.compare).toHaveBeenCalledWith("senha123", "hashed_pw");
+    //Expected answers
+    expect(mockService.loginUser).toHaveBeenCalledWith(
+      req.body.email,
+      req.body.password
+    );
     expect(jwt.sign).toHaveBeenCalledWith(
-      { id: 1, name: "Teste Login" },
-      "A3_UNIT_TEST_ENV",
-      { expiresIn: "8h" }
+      { userId: user.id, email: user.email },
+      expect.any(String),
+      { expiresIn: "24h" }
     );
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ token: "mocked_token" })); // Expected answer.
+    expect(res.json).toHaveBeenCalledWith({
+      msg: `Bem vindo, ${user.name}!`,
+      token: "fake-jwt-token",
+    });
   });
 
-  test("case method: loginUser - User not found", async () => {
+  test("case method: loginUser - Service error: User or password invalid", async () => {
     const req = {
       body: {
-        email: "login@email.com",
+        email: "invalidlogin@email.com",
         password: "senha123",
       },
     };
     const res = mockRes();
-    (knex.first as jest.Mock).mockResolvedValueOnce(undefined); // simulate no user found
-    await userController.loginUser(req as any, res as any);
+    mockService.loginUser.mockResolvedValueOnce(null);
+    await userController.loginUser(req as Request, res as Response);
+
+    //Expected Answers
     expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith(expect.stringContaining("E-mail ou senha inválidos")); // Expected answer.
+    expect(res.json).toHaveBeenCalledWith("E-mail ou senha inválidos.");
   });
 
-  test("case method: loginUser - Wrong password", async () => {
+  test("case method: loginUser - Service error: Generic error", async () => {
     const req = {
       body: {
-        email: "login@email.com",
+        email: "invalidlogin@email.com",
         password: "senha",
       },
     };
     const res = mockRes();
+    mockService.loginUser.mockRejectedValueOnce(new Error("Erro inesperado"));
+    await userController.loginUser(req as Request, res as Response);
 
-    (knex.first as jest.Mock).mockResolvedValueOnce({
-      id: 2,
-      name: "Teste Login",
-      password: "hashed_pw",
-    });
-
-    (bcrypt.compare as jest.Mock).mockResolvedValue(false); // password check fails
-    await userController.loginUser(req as any, res as any);
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith(expect.stringContaining("E-mail ou senha inválidos")); // Expected answer.
+    //Expected answers
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith("Erro durante o login.");
   });
-});
-
-// I'm deleting the mocked password test environment after the tests.
-afterAll(() => {
-  delete process.env.JWT_PASSWORD;
 });

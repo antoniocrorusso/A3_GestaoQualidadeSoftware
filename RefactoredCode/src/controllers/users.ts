@@ -6,20 +6,22 @@ import { UserRepository } from '../repositories/UserRepository';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { Request, Response } from 'express';
-import { BaseController } from './baseController';
-import { User } from '../entities/user';
 
 dotenv.config();
 
-class UserController extends BaseController {
+export class UserController extends BaseController {
     private static _instance: UserController;
     private userService: UserService;
 
-    private constructor() {
+    private constructor(service?: UserService) {
         super();
         const userRepository = new UserRepository();
         this.userService = new UserService(userRepository);
+    }
+
+    //Added a new method to allow the instance creation for Unit tests, to no mess with this private constructor.
+    public static createInstanceForTest(mockService: UserService): UserController {
+        return new UserController(mockService);
     }
 
     public static getInstance(): UserController {

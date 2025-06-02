@@ -1,8 +1,8 @@
 import { Patient } from '../entities/patient';
-import { IPatientRepository } from '../repositories/PatientRepository';
+import { PatientRepository } from '../repositories/PatientRepository';
 
 export class PatientService {
-    constructor(private repository: IPatientRepository) { }
+    constructor(private repository: PatientRepository) { }
 
     async getAllPatients(): Promise<Patient[]> {
         try {

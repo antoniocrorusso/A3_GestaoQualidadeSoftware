@@ -1,8 +1,8 @@
 import { User } from '../entities/user';
-import { IUserRepository } from '../repositories/UserRepository';
+import { UserRepository } from '../repositories/UserRepository';
 
 export class UserService {
-    constructor(private repository: IUserRepository) { }
+    constructor(private repository: UserRepository) { }
 
     async createUser(userData: Omit<User, 'id'>): Promise<User> {
         try {
@@ -11,7 +11,7 @@ export class UserService {
                 throw new Error('Já existe um usuário com este e-mail cadastrado.');
             }
 
-            userData.setPassword(userData.password);
+            await userData.setPassword(userData.password);
             const user = new User(userData);
             return await this.repository.create(user);
         } catch (error) {
