@@ -11,8 +11,8 @@ Magda
 
 | Nome  | RA |
 | -------------  | --- |
-| Antonio Carlos R. Oliveira Russo | ** |
-| Victor Henique Chaves De Jesus| RA 822222873|
-| Lucas Almeida Braz| RA 1272322938|
-| Igor Henrque Andrade Martins| RA 323210810|
+| Antonio Carlos R. Oliveira Russo | RA 12523118842 |
+| Victor Henique Chaves De Jesus| RA 822222873 |
+| Lucas Almeida Braz| RA 1272322938 |
+| Igor Henrque Andrade Martins| RA 323210810 |
 
