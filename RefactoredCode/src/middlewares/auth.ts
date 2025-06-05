@@ -25,17 +25,16 @@ export const authentication = async (req: AuthenticatedRequest, res: Response, n
     }
 
     try {
-        const user = jwt.verify(token, process.env.JWT_PASSWORD as string) as { id: number; name: string };
+        const user = jwt.verify(token, process.env.JWT_PASSWORD as string) as { userId: number; name: string };
 
-        const existingUser = await knex('users').where({ id: user.id }).first();
+        const existingUser = await knex('users').where({ id: user.userId }).first();
         if (!existingUser) {
             res.status(401).json({ mensagem: "Usuário não autorizado" });
             return;
         }
-
         req.user = existingUser;
         next();
     } catch (error) {
-        res.status(401).json({ mensagem: 'Token inválido ou expirado.' });
+        res.status(401).json({ mensagem: 'Token inválido ou expirado.', error: error });
     }
 };
